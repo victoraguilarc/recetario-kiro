@@ -32,7 +32,8 @@ src/
 ├── index.css             Tailwind v4 + tokens @theme
 ├── types.ts              Recipe, RecipeInput, Category, Difficulty
 ├── db.ts                 API tipada de IndexedDB
-├── seed.ts               Recetas mexicanas seed + categorías UI
+├── seed.ts               Recetas mexicanas seed + resolver de imágenes Wikipedia
+├── router.ts             Mapeo view ↔ location.hash
 ├── utils.ts              fileToDataURL, CATEGORY_LABEL
 ├── store/recipes.ts      Store Zustand + selectores
 └── components/
@@ -48,7 +49,7 @@ Importaciones absolutas con alias `@/*` → `./src/*` (configurado en `tsconfig.
 
 ## Flujos
 
-La app es una SPA sin router; `App.tsx` cambia de vista según el estado `view` de la store (`list` · `detail` · `form`).
+La app es una SPA con **routing ligero por hash**: el estado `view` de la store es la única fuente de verdad para qué se renderiza (`list` · `detail` · `form`), y `src/router.ts` lo sincroniza con `location.hash`. No hay carpetas `pages/`/`routes/`.
 
 ### 1. Arranque / seed inicial
 - Al montar, `initialize()` cuenta los registros en IndexedDB.
@@ -84,11 +85,17 @@ La app es una SPA sin router; `App.tsx` cambia de vista según el estado `view` 
 - El formulario se hidrata con la receta existente; `saveRecipe` hace `put` en IndexedDB conservando `createdAt` y actualizando `updatedAt`.
 
 ### 8. Eliminar receta
-- Desde el detalle, botón **Eliminar** → `deleteRecipe(id)` borra de IndexedDB y del estado, regresando a la lista.
+- Desde el detalle, botón **Eliminar** → muestra `confirm("¿Eliminar \"<título>\"?")`.
+- Si se acepta, `deleteRecipe(id)` borra de IndexedDB y del estado, regresando a la lista. Si se cancela, no pasa nada.
 
 ### 9. Navegación
 - Logo/título en el header siempre vuelve a la lista.
 - Formulario y detalle tienen "← Cancelar" / "← Volver" propios.
+- La vista activa se refleja en el `location.hash` (`#/`, `#/new`, `#/recipe/:id`, `#/recipe/:id/edit`) vía `src/router.ts`. El back/forward del navegador y los enlaces compartibles funcionan: un `popstate` listener en `App.tsx` re-deriva la vista desde el hash.
+
+### 10. Seed de imágenes
+- Si la base está vacía, además de insertar las 8 recetas, `initialize()` consulta la MediaWiki API (`pageimages`, miniaturas de 800 px) por receta y descarga la imagen principal del artículo correspondiente, convirtiéndola a Data URL antes del `bulkAdd`.
+- Mapeo de artículos en `src/seed.ts` (`SEED_IMAGE_ARTICLES`), con fallbacks por receta. Si todos los candidatos fallan o no hay red, la receta queda con `image: null` y la UI muestra el emoji 🍽️.
 
 ---
 

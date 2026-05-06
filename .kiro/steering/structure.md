@@ -21,7 +21,8 @@ recetario/
     ├── index.css            # Tailwind v4 + tokens @theme
     ├── types.ts             # Recipe, RecipeInput, Category, Difficulty
     ├── db.ts                # API de IndexedDB
-    ├── seed.ts              # Recetas mexicanas seed + categorías UI
+    ├── seed.ts              # Recetas mexicanas seed + resolver de imágenes Wikipedia
+    ├── router.ts            # Mapeo view ↔ location.hash
     ├── utils.ts             # Helpers (fileToDataURL, CATEGORY_LABEL)
     ├── store/
     │   └── recipes.ts       # Zustand store + selectores
@@ -37,7 +38,7 @@ recetario/
 - Lógica de estado/persistencia nunca vive dentro de un componente; va en `store/` o `db.ts`.
 - Helpers puros van en `utils.ts`. Si crece, partir por dominio (`utils/format.ts`, `utils/file.ts`).
 - Tipos compartidos en `types.ts`. Tipos privados de un componente pueden quedarse en su archivo.
-- Nada de carpetas `pages/` o `routes/`: la app navega por estado en la store, no por URL.
+- Nada de carpetas `pages/` o `routes/`. La app navega por estado en la store; `src/router.ts` espeja ese estado en `location.hash` (back/forward del navegador y enlaces compartibles), pero el render sigue siendo `view → componente` desde la store.
 
 ## Importaciones
 - Siempre con alias absoluto: `import RecipeCard from '@/components/RecipeCard'`.
