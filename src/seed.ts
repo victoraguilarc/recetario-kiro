@@ -9,6 +9,74 @@ export const CATEGORIES: { id: Category | 'todas'; label: string }[] = [
   { id: 'salsa', label: 'Salsas' },
 ]
 
+interface SeedImageRef {
+  lang: 'es' | 'en'
+  article: string
+}
+
+const SEED_IMAGE_ARTICLES: Record<string, SeedImageRef[]> = {
+  'Tacos al Pastor': [
+    { lang: 'es', article: 'Taco_al_pastor' },
+    { lang: 'en', article: 'Al_pastor' },
+  ],
+  'Guacamole Tradicional': [{ lang: 'es', article: 'Guacamole' }],
+  'Pozole Rojo': [{ lang: 'es', article: 'Pozole' }],
+  'Enchiladas Verdes': [{ lang: 'es', article: 'Enchilada' }],
+  'Chiles en Nogada': [
+    { lang: 'es', article: 'Chile_en_nogada' },
+    { lang: 'en', article: 'Chiles_en_nogada' },
+  ],
+  'Salsa Roja Molcajeteada': [
+    { lang: 'es', article: 'Pico_de_gallo' },
+    { lang: 'es', article: 'Chile_de_árbol' },
+  ],
+  'Agua de Jamaica': [{ lang: 'es', article: 'Agua_de_Jamaica' }],
+  'Flan Napolitano': [{ lang: 'es', article: 'Flan' }],
+}
+
+interface MWResponse {
+  query?: { pages?: Record<string, { thumbnail?: { source?: string } }> }
+}
+
+function blobToDataURL(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader()
+    r.onload = () => resolve(r.result as string)
+    r.onerror = () => reject(r.error)
+    r.readAsDataURL(blob)
+  })
+}
+
+async function fetchThumb(ref: SeedImageRef): Promise<string | null> {
+  try {
+    const api = `https://${ref.lang}.wikipedia.org/w/api.php?action=query&format=json&titles=${encodeURIComponent(ref.article)}&prop=pageimages&piprop=thumbnail&pithumbsize=800&origin=*`
+    const res = await fetch(api)
+    if (!res.ok) return null
+    const data: MWResponse = await res.json()
+    const first = Object.values(data.query?.pages ?? {})[0]
+    return first?.thumbnail?.source ?? null
+  } catch {
+    return null
+  }
+}
+
+export async function resolveSeedImage(title: string): Promise<string | null> {
+  const refs = SEED_IMAGE_ARTICLES[title]
+  if (!refs) return null
+  for (const ref of refs) {
+    const url = await fetchThumb(ref)
+    if (!url) continue
+    try {
+      const imgRes = await fetch(url)
+      if (!imgRes.ok) continue
+      return await blobToDataURL(await imgRes.blob())
+    } catch {
+      continue
+    }
+  }
+  return null
+}
+
 export const SEED_RECIPES: RecipeInput[] = [
   {
     title: 'Tacos al Pastor',

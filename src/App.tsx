@@ -3,6 +3,7 @@ import RecipeList from '@/components/RecipeList'
 import RecipeDetail from '@/components/RecipeDetail'
 import RecipeForm from '@/components/RecipeForm'
 import { useRecipesStore } from '@/store/recipes'
+import { hashToView } from '@/router'
 
 export default function App() {
   const initialize = useRecipesStore((s) => s.initialize)
@@ -15,6 +16,14 @@ export default function App() {
   useEffect(() => {
     initialize()
   }, [initialize])
+
+  useEffect(() => {
+    const onPop = () => {
+      useRecipesStore.setState({ view: hashToView(window.location.hash) })
+    }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
 
   return (
     <div className="min-h-full">

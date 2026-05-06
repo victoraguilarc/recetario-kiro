@@ -7,7 +7,8 @@ import {
   getAllRecipes,
   saveRecipe as dbSave,
 } from '@/db'
-import { SEED_RECIPES } from '@/seed'
+import { SEED_RECIPES, resolveSeedImage } from '@/seed'
+import { currentViewFromUrl, viewToHash } from '@/router'
 
 export type View =
   | { name: 'list' }
@@ -38,7 +39,7 @@ export const useRecipesStore = create<RecipesState>((set, get) => ({
   loading: true,
   search: '',
   category: 'todas',
-  view: { name: 'list' },
+  view: currentViewFromUrl(),
 
   initialize: () => {
     if (initPromise) return initPromise
@@ -46,7 +47,10 @@ export const useRecipesStore = create<RecipesState>((set, get) => ({
       set({ loading: true })
       const count = await countRecipes()
       if (count === 0) {
-        await bulkAdd(SEED_RECIPES)
+        const seeded = await Promise.all(
+          SEED_RECIPES.map(async (r) => ({ ...r, image: await resolveSeedImage(r.title) })),
+        )
+        await bulkAdd(seeded)
       }
       const recipes = await getAllRecipes()
       set({ recipes, loading: false })
@@ -56,7 +60,13 @@ export const useRecipesStore = create<RecipesState>((set, get) => ({
 
   setSearch: (search) => set({ search }),
   setCategory: (category) => set({ category }),
-  setView: (view) => set({ view }),
+  setView: (view) => {
+    const target = viewToHash(view)
+    if (typeof window !== 'undefined' && window.location.hash !== target) {
+      window.history.pushState(null, '', target)
+    }
+    set({ view })
+  },
 
   saveRecipe: async (input) => {
     const saved = await dbSave(input)
