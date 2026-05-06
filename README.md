@@ -46,6 +46,52 @@ Importaciones absolutas con alias `@/*` → `./src/*` (configurado en `tsconfig.
 
 ---
 
+## Flujos
+
+La app es una SPA sin router; `App.tsx` cambia de vista según el estado `view` de la store (`list` · `detail` · `form`).
+
+### 1. Arranque / seed inicial
+- Al montar, `initialize()` cuenta los registros en IndexedDB.
+- Si la base está vacía, inserta `SEED_RECIPES` (8 recetas mexicanas) con `bulkAdd`.
+- Carga todas las recetas y pasa a la vista lista. Muestra "Cargando recetas..." mientras tanto.
+
+### 2. Listar recetas
+- Vista por defecto. Renderiza `RecipeList` con un grid responsive de `RecipeCard`.
+- Chips de categoría: **Todas · Entradas · Principales · Postres · Bebidas · Salsas**.
+- Empty state diferenciado: "Aún no hay recetas" vs. "No se encontraron recetas con ese filtro".
+
+### 3. Buscar
+- Input tipo `search` en el header (solo visible en vista lista).
+- Filtra en memoria por `title`, `description` e `ingredients` (case-insensitive, substring).
+- Se combina con el filtro de categoría activo.
+
+### 4. Filtrar por categoría
+- Click en un chip actualiza `category` en la store.
+- `'todas'` desactiva el filtro; cualquier otro valor restringe a esa `Category`.
+
+### 5. Ver detalle
+- Click en una `RecipeCard` → `setView({ name: 'detail', id })`.
+- `RecipeDetail` muestra foto, descripción, categoría, tiempo, porciones, dificultad, ingredientes y pasos.
+
+### 6. Crear receta
+- Botón **"+ Nueva receta"** en el header → `setView({ name: 'form' })`.
+- Campos: título, descripción, categoría, tiempo (min), porciones, dificultad (Fácil · Media · Difícil), foto, ingredientes (lista dinámica), pasos (lista dinámica).
+- Foto: `<input type="file">` → `fileToDataURL` → se guarda como Data URL dentro del registro.
+- Submit valida que `title` no esté vacío, limpia strings, persiste con `saveRecipe` y navega al detalle creado.
+
+### 7. Editar receta
+- Desde el detalle, botón **Editar** → `setView({ name: 'form', id })`.
+- El formulario se hidrata con la receta existente; `saveRecipe` hace `put` en IndexedDB conservando `createdAt` y actualizando `updatedAt`.
+
+### 8. Eliminar receta
+- Desde el detalle, botón **Eliminar** → `deleteRecipe(id)` borra de IndexedDB y del estado, regresando a la lista.
+
+### 9. Navegación
+- Logo/título en el header siempre vuelve a la lista.
+- Formulario y detalle tienen "← Cancelar" / "← Volver" propios.
+
+---
+
 ## Configuración para editores con IA
 
 ### `.mcp.json` — Claude Code

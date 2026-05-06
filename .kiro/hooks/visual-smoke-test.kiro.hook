@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Visual smoke test (Playwright MCP)",
+  "description": "Ejecuta un smoke test visual con el MCP de Playwright contra el dev server.",
+  "version": "1",
+  "when": {
+    "type": "manual"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Usa el MCP de Playwright para abrir http://localhost:5173, esperar a que el grid de recetas esté visible, capturar screenshots de: (1) listado, (2) detalle de la primera receta, (3) formulario de nueva receta. Reporta cualquier error de consola o regresión visual obvia."
+  }
+}

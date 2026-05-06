@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "name": "Typecheck on save",
+  "description": "Cuando se guarda un archivo TypeScript, pide al agente que verifique que tsc --noEmit sigue pasando.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": ["src/**/*.ts", "src/**/*.tsx"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Acabo de guardar un archivo TypeScript. Ejecuta `npx tsc --noEmit` y, si hay errores, propónme cambios concretos para arreglarlos. No edites nada todavía: muéstrame primero el plan."
+  }
+}

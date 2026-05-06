@@ -31,6 +31,8 @@ interface RecipesState {
   deleteRecipe: (id: number) => Promise<void>
 }
 
+let initPromise: Promise<void> | null = null
+
 export const useRecipesStore = create<RecipesState>((set, get) => ({
   recipes: [],
   loading: true,
@@ -38,14 +40,18 @@ export const useRecipesStore = create<RecipesState>((set, get) => ({
   category: 'todas',
   view: { name: 'list' },
 
-  initialize: async () => {
-    set({ loading: true })
-    const count = await countRecipes()
-    if (count === 0) {
-      await bulkAdd(SEED_RECIPES)
-    }
-    const recipes = await getAllRecipes()
-    set({ recipes, loading: false })
+  initialize: () => {
+    if (initPromise) return initPromise
+    initPromise = (async () => {
+      set({ loading: true })
+      const count = await countRecipes()
+      if (count === 0) {
+        await bulkAdd(SEED_RECIPES)
+      }
+      const recipes = await getAllRecipes()
+      set({ recipes, loading: false })
+    })()
+    return initPromise
   },
 
   setSearch: (search) => set({ search }),
